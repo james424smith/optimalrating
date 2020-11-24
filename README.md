@@ -8,6 +8,12 @@ This projects consists of two frontend technologies namely Vue js and React js. 
 ```
 git clone git@bitbucket.org:muratdinler/optimalrating.git
 cd optimalrating/optimalrating
+npm install
+npm start
+```
+
+```
+git clone git@bitbucket.org:muratdinler/optimalrating.git
 cd optimalrating/panel.optimalrating
 npm install
 npm start
@@ -17,7 +23,7 @@ npm start
 The backend part of this project is developed over PHP technology using Laravel framework.
 
 ```
-git cd optimalrating/server.optimalrating
+cd optimalrating/server.optimalrating
 cp .env.example .env
 composer install
 php artisan key:generate
