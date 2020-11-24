@@ -1,8 +1,8 @@
 # OPTIMAL RATING PROJECT
 
-Optimal Rating project is build in different Frontend and Backend techstacks
+Optimal Rating project is developed in different Frontend and Backend techstacks
 
-** Front End **
+### Front End
 This projects consists of two frontend technologies namely Vue js and React js. Admin panel namely panel.optimalrating is developed over Vue js technology and Client Site namely optimalrating is developed over React js technology
 
 ```
@@ -13,8 +13,8 @@ npm install
 npm start
 ```
 
-** Back End **
-The backedn part of this project is developed over PHP technology using Laravel framework.
+### Back End
+The backend part of this project is developed over PHP technology using Laravel framework.
 
 ```
 git cd optimalrating/server.optimalrating
