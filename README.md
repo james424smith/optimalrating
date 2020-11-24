@@ -1,4 +1,4 @@
-#OPTIMAL RATING PROJECT
+# OPTIMAL RATING PROJECT
 
 Optimal Rating project is build in different Frontend and Backend techstacks
 
