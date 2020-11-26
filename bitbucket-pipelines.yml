@@ -11,9 +11,4 @@ pipelines:
           name: Deploy to Uat
       
           script:
-            - ssh optimalr@de7.fcomet.com -p17177
-            - cd development && git pull origin development
-            - cd panel.optimalrating.com && npm install && npm run build && cd ..
-            - cd optimalrating.com && npm install && npm run build && cd ..
-            - cd server.optimalrating && composer install && php artisan migrate && cd ..
-            - exit
+            - cat ./deploy.sh | ssh -T optimalr@de7.fcomet.com -p17177
