@@ -1,5 +1,5 @@
 #!/bin/bash
-#script to deploy in uat
+#script to deploy in uat and master
 cd /home/optimalr/development && git checkout uat && git pull origin uat && cd
 
 cd /home/optimalr/development/optimalrating && npm install && npm run build && cd
