@@ -2,6 +2,9 @@
 
 /** No Role auth Controller */
 Route::group(['namespace' => 'Api'], function (){
+    
+    Route::post('webhook/{token}', 'WebHookController@webhook');
+
     Route::post('register', 'Auth\RegisterController@register');
     Route::post('login', 'Auth\LoginController@login');
     Route::post('login/{social}', 'Auth\LoginController@social');
