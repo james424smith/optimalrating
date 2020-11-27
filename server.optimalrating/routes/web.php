@@ -15,4 +15,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('webhook/uat', function(){
+    shell_exec('/home/optimalr/webhook/uat/deploy.sh');
+    echo "Deployed!!";
+});
+
 Auth::routes();
