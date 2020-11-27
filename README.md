@@ -13,7 +13,6 @@ npm start
 ```
 
 ```
-git clone git@bitbucket.org:muratdinler/optimalrating.git
 cd optimalrating/panel.optimalrating
 npm install
 npm start
