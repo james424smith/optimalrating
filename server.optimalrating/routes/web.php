@@ -16,7 +16,7 @@ Route::get('/', function () {
 });
 
 Route::get('webhook/uat', function(){
-    shell_exec('/home/optimalr/webhook/uat/deploy.sh');
+    exec('/home/optimalr/webhook/uat/deploy.sh');
     echo "Deployed!!";
 });
 
