@@ -1,14 +1,9 @@
 image: ubuntu:16.04
 
 pipelines:
-
   branches:
-
     uat:
-
       - step:
-
           name: Deploy to Uat
-      
           script:
             - cat ./deploy.sh | ssh -T optimalr@de7.fcomet.com -p17177
