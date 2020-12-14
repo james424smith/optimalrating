@@ -6,4 +6,5 @@ pipelines:
       - step:
           name: Deploy to Uat
           script:
-            - cat ./deploy.sh | ssh -T optimalr@de7.fcomet.com -p17177
+            #- cat ./deploy.sh | ssh -T optimalr@de7.fcomet.com -p17177
+            - cat ./deploy.sh | ssh -T optimalr@depro7.fcomet.com -p17177
