@@ -30,8 +30,18 @@ class UserController extends Controller
 
     public function userProfile($user)
     {
-        $user = User::with(['userDetails','country', 'city'])->where('username','=', $user)->first();
-        $this->customJsonResponse->setData(200,  'msg.success.user.view', $user);
+        $user = User::with(
+            [
+                'userDetails',
+                'country',
+                'city',
+                'privacySettings.privacy',
+                'privacySettings.privacy.options',
+                'privacySettings.option'
+            ])
+            ->where('username', '=', $user)
+            ->first();
+        $this->customJsonResponse->setData(200, 'msg.success.user.view', $user);
         return $this->customJsonResponse->getResponse();
     }
 
@@ -55,26 +65,33 @@ class UserController extends Controller
             'city_id' => 'required'
         ]);
 
-        if (!$userValidator->fails() && ($user->status === 'disapproved' || $user->status === 'pendingapproved')) {
+        if (!$userValidator->fails() && ($user->status === 'disapproved' || $user->status === 'pendingapproved'))
+        {
             $req['status'] = 'pendingapproved';
         }
-        else {
-            if (!$userValidator->fails()
+        else
+        {
+            if (
+                !$userValidator->fails()
                 && !$userDetailsValidator->fails()
                 && (bool)$user->phone_verify
-                && $user->status !== 'freeze'){
+                && $user->status !== 'freeze')
+            {
                 $req['status'] = 'approved';
             }
         }
 
-        if(!is_null($request->request->get('user')['national_image'])
+        if (
+            !is_null($request->request->get('user')['national_image'])
             && !is_null($request->request->get('user')['portrait_image'])
             && $user->status === 'freeze'
-        ) {
+        )
+        {
             $req['status'] = 'pendingFreeze';
         }
 
-        if (!$userValidator->fails() && $user->status == 'pending'){
+        if (!$userValidator->fails() && $user->status == 'pending')
+        {
             $req['status'] = 'approved';
         }
         unset($req['user_details']['email']);
@@ -85,7 +102,7 @@ class UserController extends Controller
         $this->customJsonResponse->setData(
             200,
             'msg.success.user.update',
-            User::where('id',\auth()->id())->with('userDetails')->first()
+            User::where('id', \auth()->id())->with('userDetails')->first()
         );
         return $this->customJsonResponse->getResponse();
     }
@@ -101,7 +118,7 @@ class UserController extends Controller
 
         $details->save();
 
-        $customResponse = $this->customJsonResponse->setData(200,  'msg.success.profile_image.update', $user);
+        $customResponse = $this->customJsonResponse->setData(200, 'msg.success.profile_image.update', $user);
         return $customResponse->getResponse();
     }
 
@@ -112,7 +129,7 @@ class UserController extends Controller
         $user->national_image = $request->request->get('image');
         $user->save();
 
-        $customResponse = $this->customJsonResponse->setData(200,  'msg.success.national_image.update', $user);
+        $customResponse = $this->customJsonResponse->setData(200, 'msg.success.national_image.update', $user);
         return $customResponse->getResponse();
     }
 
@@ -122,14 +139,14 @@ class UserController extends Controller
         $user->portrait_image = $request->request->get('image');
         $user->save();
 
-        $customResponse = $this->customJsonResponse->setData(200,  'msg.success.portrait_image.update', $user);
+        $customResponse = $this->customJsonResponse->setData(200, 'msg.success.portrait_image.update', $user);
         return $customResponse->getResponse();
     }
 
     public function getProfile()
     {
         $user = User::with('userDetails')->find(\auth()->id());
-        $this->customJsonResponse->setData(200,  'msg.success.user.view', $user);
+        $this->customJsonResponse->setData(200, 'msg.success.user.view', $user);
         return $this->customJsonResponse->getResponse();
     }
 
@@ -138,11 +155,12 @@ class UserController extends Controller
         $user = \auth()->user();
         $userDetails = $user->userDetails()->first();
 
-        $smsService = SmsVerify::where('phone_number','=',\request('to'))
+        $smsService = SmsVerify::where('phone_number', '=', \request('to'))
             ->where('sms', '=', \request('verify_code'))->first();
 
-        if(!$smsService) {
-            $this->customJsonResponse->setData(400,  'msg.error.send.verify.sms.error', '', ['error'=>'Sms verify error']);
+        if (!$smsService)
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.send.verify.sms.error', '', ['error' => 'Sms verify error']);
             return $this->customJsonResponse->getResponse();
         }
 
@@ -152,7 +170,7 @@ class UserController extends Controller
         $userDetails->phone_number = \request('to');
         $userDetails->update();
 
-        $this->customJsonResponse->setData(200,  'msg.success.update.phone_number');
+        $this->customJsonResponse->setData(200, 'msg.success.update.phone_number');
         return $this->customJsonResponse->getResponse();
     }
 
@@ -166,7 +184,7 @@ class UserController extends Controller
             ]
         )->find(\auth()->id());
 
-        $this->customJsonResponse->setData(200,  'msg.success.user.view', $user->privacySettings);
+        $this->customJsonResponse->setData(200, 'msg.success.user.view', $user->privacySettings);
         return $this->customJsonResponse->getResponse();
     }
 
@@ -176,14 +194,15 @@ class UserController extends Controller
 
         $privacy = UserPrivacySetting::find(\request('privacy'));
 
-        if ($privacy->user_id != $user->id) {
-            $this->customJsonResponse->setData(400,  'msg.error.not_privacy');
+        if ($privacy->user_id != $user->id)
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.not_privacy');
             return $this->customJsonResponse->getResponse();
         }
         $privacy->option_id = \request('option');
         $privacy->update();
 
-        $this->customJsonResponse->setData(200,  'msg.success.privacy_update', $user->privacySettings);
+        $this->customJsonResponse->setData(200, 'msg.success.privacy_update', $user->privacySettings);
         return $this->customJsonResponse->getResponse();
     }
 
@@ -192,7 +211,7 @@ class UserController extends Controller
         $user = \auth()->user();
         $user->password = bcrypt(\request('password'));
         $user->save();
-        $this->customJsonResponse->setData(200,  'msg.success.password_change');
+        $this->customJsonResponse->setData(200, 'msg.success.password_change');
         return $this->customJsonResponse->getResponse();
     }
 
@@ -200,12 +219,13 @@ class UserController extends Controller
     {
         $user = \auth()->user();
 
-        if (!Hash::check(\request('password'), $user->password)) {
-            $this->customJsonResponse->setData(400,  'msg.error.password');
+        if (!Hash::check(\request('password'), $user->password))
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.password');
             return $this->customJsonResponse->getResponse();
         }
 
-        $this->customJsonResponse->setData(200,  'msg.success.correct');
+        $this->customJsonResponse->setData(200, 'msg.success.correct');
         return $this->customJsonResponse->getResponse();
     }
 
@@ -214,59 +234,62 @@ class UserController extends Controller
         $user = \auth()->user();
 
         $delete = new UserToken();
-        
-        $delete->user =  \auth()->id();
-        
+
+        $delete->user = \auth()->id();
+
         $delete->expire_at = Carbon::now()->addWeek(1);
         $delete->token = md5(Carbon::now()->timestamp);
-        
+
         $delete->save();
 
         $mail = new MailService();
-        
+
         $result = $mail->sendMail($delete->token, $user, 'approve-delete-profile', 'delete_profile');
-        
-        $this->customJsonResponse->setData(200,  'msg.success.delete_profile');
+
+        $this->customJsonResponse->setData(200, 'msg.success.delete_profile');
         return $this->customJsonResponse->getResponse();
     }
 
     public function ApproveDeleteProfile($token)
     {
-        $deleteToken = UserToken::where('token','=', $token)->first();
+        $deleteToken = UserToken::where('token', '=', $token)->first();
 
-        if (is_null($deleteToken)) {
-            $this->customJsonResponse->setData(400,  'msg.error.token_error');
+        if (is_null($deleteToken))
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.token_error');
             return $this->customJsonResponse->getResponse();
         }
 
         $user = User::find($deleteToken->user);
 
-        if (!is_null($user)) {
+        if (!is_null($user))
+        {
             $userService = new UserService();
             $userService->deleteUser($user);
         }
 
-        $this->customJsonResponse->setData(200,  'msg.success.delete_profile');
+        $this->customJsonResponse->setData(200, 'msg.success.delete_profile');
         return $this->customJsonResponse->getResponse();
     }
 
     public function resetMyPassword()
     {
-        $userWithEmail = User::where('email','=', \request('user'))->first();
-        $userWithPhoneNumber = UserDetail::where('phone_number','=', \request('user'))->first();
+        $userWithEmail = User::where('email', '=', \request('user'))->first();
+        $userWithPhoneNumber = UserDetail::where('phone_number', '=', \request('user'))->first();
 
-        $userWithPhoneNumber = !is_null($userWithPhoneNumber) ? $userWithPhoneNumber->user()->first() :null;
+        $userWithPhoneNumber = !is_null($userWithPhoneNumber) ? $userWithPhoneNumber->user()->first() : null;
 
         $user = $userWithEmail ?? $userWithPhoneNumber;
 
-        if (is_null($user)) {
-            $this->customJsonResponse->setData(400,  'msg.error.phone_number_or_email_not_found');
+        if (is_null($user))
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.phone_number_or_email_not_found');
             return $this->customJsonResponse->getResponse();
         }
 
         $delete = new UserToken();
 
-        $delete->user =  $user->id;
+        $delete->user = $user->id;
         $delete->expire_at = Carbon::now()->addWeek(1);
         $delete->token = md5(Carbon::now()->timestamp);
 
@@ -276,64 +299,68 @@ class UserController extends Controller
 
         $mail->sendMail($delete->token, $user, 'reset-password', 'reset_password');
 
-        $this->customJsonResponse->setData(200,  'msg.success.sended_reset_password_code');
+        $this->customJsonResponse->setData(200, 'msg.success.sended_reset_password_code');
         return $this->customJsonResponse->getResponse();
     }
 
     public function newPassword($token)
     {
-        $deleteToken = UserToken::where('token','=', $token)->first();
+        $deleteToken = UserToken::where('token', '=', $token)->first();
 
-        if (is_null($deleteToken)) {
-            $this->customJsonResponse->setData(400,  'msg.error.token_error');
+        if (is_null($deleteToken))
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.token_error');
             return $this->customJsonResponse->getResponse();
         }
 
-        $user = User::where('id','=', $deleteToken->user)->first();
+        $user = User::where('id', '=', $deleteToken->user)->first();
 
         $user->password = bcrypt(\request('password'));
 
         $user->save();
 
-        $this->customJsonResponse->setData(200,  'msg.success.password_changed');
+        $this->customJsonResponse->setData(200, 'msg.success.password_changed');
         return $this->customJsonResponse->getResponse();
     }
 
     public function verifyEmailChange($token)
     {
-        $deleteToken = UserToken::where('token','=', $token)->first();
+        $deleteToken = UserToken::where('token', '=', $token)->first();
 
-        if (is_null($deleteToken)) {
-            $this->customJsonResponse->setData(400,  'msg.error.token_error');
+        if (is_null($deleteToken))
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.token_error');
             return $this->customJsonResponse->getResponse();
         }
 
-        $user = User::where('id','=', $deleteToken->user)->first();
+        $user = User::where('id', '=', $deleteToken->user)->first();
 
         $user->email = $deleteToken->new_data;
 
         $user->save();
 
-        $this->customJsonResponse->setData(200,  'msg.success.email_changed');
+        $this->customJsonResponse->setData(200, 'msg.success.email_changed');
         return $this->customJsonResponse->getResponse();
     }
 
     public function emailChange()
     {
-        if (is_null(\request('email'))) {
-            $this->customJsonResponse->setData(400,  'msg.error.new_email_address_required');
+        if (is_null(\request('email')))
+        {
+            $this->customJsonResponse->setData(400, 'msg.error.new_email_address_required');
             return $this->customJsonResponse->getResponse();
         }
 
-        if(User::whereEmail(\request('email'))->first()) {
-            $customResponse = $this->customJsonResponse->setData(409,  'msg.error.email_already_used');
+        if (User::whereEmail(\request('email'))->first())
+        {
+            $customResponse = $this->customJsonResponse->setData(409, 'msg.error.email_already_used');
             return $customResponse->getResponse();
         }
 
 
         $user = \auth()->user();
         $delete = new UserToken();
-        $delete->user =  $user->id;
+        $delete->user = $user->id;
         $delete->expire_at = Carbon::now()->addWeek(1);
         $delete->old_data = $user->email;
         $delete->new_data = \request('email');
@@ -345,7 +372,7 @@ class UserController extends Controller
 
         $mail->sendMail($delete->token, $user, 'email-change', 'change_email');
 
-        $this->customJsonResponse->setData(200,  'msg.success.sended_email_change_token');
+        $this->customJsonResponse->setData(200, 'msg.success.sended_email_change_token');
         return $this->customJsonResponse->getResponse();
     }
 }
