@@ -30,14 +30,10 @@ class UserController extends Controller
 
     public function userProfile($user)
     {
-        $user = User::with(
-            [
+        $user = User::with([
                 'userDetails',
                 'country',
-                'city',
-                'privacySettings.privacy',
-                'privacySettings.privacy.options',
-                'privacySettings.option'
+                'city'
             ])
             ->where('username', '=', $user)
             ->first();

@@ -42,29 +42,39 @@ class SurveysController extends Controller
 
         $model = Survey::with('choices.votes')->where('type', $type);
 
-        if(request('year')){
+        if (request('year'))
+        {
             $model->whereMonth('start_at', request('year'));
         }
 
-        if(request('month')){
+        if (request('month'))
+        {
             $model->whereMonth('start_at', request('month'));
         }
 
-        if(request('status') !== null){
+        if (request('status') !== null)
+        {
             $model->whereStatus(request('status', 0));
         }
 
-        if(request('category') !== null){
+        if (request('category') !== null)
+        {
             $model->where('category_id', request('category'));
         }
 
 
-        if(auth()->user()->hasRole('country_admin')){
+        if (auth()->user()->hasRole('country_admin'))
+        {
             $model->where('country_id', auth()->user()->country_id)->where('is_world', false);
-        } else {
-            if($type == 'normal'){
+        }
+        else
+        {
+            if ($type == 'normal')
+            {
                 $model->where('is_world', true);
-            } else {
+            }
+            else
+            {
                 $model->where('country_id', null);
             }
         }
@@ -72,7 +82,7 @@ class SurveysController extends Controller
         // else {
         //     $model->where('country_id', null);
         // }
-        
+
         // $country = (new CountryService($request))->getCountry();	
 
         // if(auth()->user()->hasRole('country_admin')){	
@@ -104,18 +114,21 @@ class SurveysController extends Controller
 
         $validator = new SurveyValidator();
 
-        if($response = $validator->validate())
+        if ($response = $validator->validate())
             return $response;
 
-        if(request('type') == 'special' && !auth()->user()->hasAnyRole(['super_admin', 'country_admin'])){
+        if (request('type') == 'special' && !auth()->user()->hasAnyRole(['super_admin', 'country_admin']))
+        {
             return $this->surveyError('You are not allowed to add special survey');
         }
 
 
-        if(!$request->is_world && !auth()->user()->hasAnyRole(['super_admin','country_admin'])){
+        if (!$request->is_world && !auth()->user()->hasAnyRole(['super_admin', 'country_admin']))
+        {
             $country = Country::where('code', $request->country_code)->first();
-            if($country->id != auth()->user()->country_id){
-                return $this->jsonResponse->setData(400,  'msg.error_not_allowed_country', $survey)->getResponse();
+            if ($country->id != auth()->user()->country_id)
+            {
+                return $this->jsonResponse->setData(400, 'msg.error_not_allowed_country', $survey)->getResponse();
             }
         }
 
@@ -123,15 +136,17 @@ class SurveysController extends Controller
 
         //store the choices
 
-        $this->addSurveyChoices($survey,null, $request);
+        $this->addSurveyChoices($survey, null, $request);
 
-        if($survey){
+        if ($survey)
+        {
             // add survey subject
-            if($subjects = request('subjects')){
-                foreach($subjects as $subject)
+            if ($subjects = request('subjects'))
+            {
+                foreach ($subjects as $subject)
                     $survey->subjects()->attach($subject);
             }
-            $this->jsonResponse->setData(200,  'msg.info.survey.created', $survey);
+            $this->jsonResponse->setData(200, 'msg.info.survey.created', $survey);
             return $this->jsonResponse->getResponse();
         }
     }
@@ -150,12 +165,13 @@ class SurveysController extends Controller
             'comments.likes.user',
             'user.userDetails'
         ])
-        ->where('id', $id);
+            ->where('id', $id);
 
-        if(auth()->user() && !auth()->user()->hasAnyRole(['country_admin', 'super_admin'])){
-            $model->where('status','=',1);
+        if (auth()->user() && !auth()->user()->hasAnyRole(['country_admin', 'super_admin']))
+        {
+            $model->where('status', '=', 1);
         }
-        
+
         $model = $model->first();
         $this->jsonResponse->setData(
             200,
@@ -178,12 +194,13 @@ class SurveysController extends Controller
 
         $fillable = request()->only($survey->getFillable());
 
-        $fillable["start_at"] = date("Y-m-d H:i:s", strtotime($fillable["start_at"] ));
-        $fillable["expire_at"] = date("Y-m-d H:i:s", strtotime($fillable["expire_at"] ));
+        $fillable["start_at"] = date("Y-m-d H:i:s", strtotime($fillable["start_at"]));
+        $fillable["expire_at"] = date("Y-m-d H:i:s", strtotime($fillable["expire_at"]));
 
         $update = $surveyRepository->updateData($survey, $fillable);
 
-        if($update){
+        if ($update)
+        {
             //update the choices
             $this->addSurveyChoices($survey, 'update', $request);
 
@@ -202,34 +219,38 @@ class SurveysController extends Controller
     {
         $validator = new SurveyVoteValidator();
 
-        if($response = $validator->validate())
+        if ($response = $validator->validate())
             return $response;
 
         $vote = SurveyVote::where('survey_id', '=', request('survey_id'))
-            ->where('user_id','=',auth()->id())->first();
+            ->where('user_id', '=', auth()->id())->first();
 
 
-        if (!is_null($vote) && $vote->choice_id == request('choice_id')) {
-            $this->jsonResponse->setData(200,  'msg.info.survey.vote.already');
+        if (!is_null($vote) && $vote->choice_id == request('choice_id'))
+        {
+            $this->jsonResponse->setData(200, 'msg.info.survey.vote.already');
             return $this->jsonResponse->getResponse();
         }
 
 
-        if (!is_null($vote)) {
+        if (!is_null($vote))
+        {
             $vote->choice_id = request('choice_id');
             $vote->update();
-        } else {
+        }
+        else
+        {
 
             $vote = new SurveyVote();
             $vote->survey_id = request('survey_id');
             $vote->choice_id = request('choice_id');
             $vote->country_id = auth()->user()->country_id;
-            $vote->user_id   = auth()->id();
+            $vote->user_id = auth()->id();
 
             $vote->save();
         }
 
-        $this->jsonResponse->setData(200,  'msg.info.survey.vote.success');
+        $this->jsonResponse->setData(200, 'msg.info.survey.vote.success');
         return $this->jsonResponse->getResponse();
     }
 
@@ -246,18 +267,17 @@ class SurveysController extends Controller
             'comments.user.userDetails',
             'comments.likes.user'
         ])
-        ->where('show_on_home', 1)
-        ->where('type','=','special')
-
-        ->where('expire_at', '>',$now)
-        ->where('start_at', '<', $now)
-        // ->whereIn('country_id', [auth()->user()->country_id, null])
-        ->where('country_id', $country ? $country->id : null)
-        ->orderBy('id', 'desc')
-        ->first();
+            ->where('show_on_home', 1)
+            ->where('type', '=', 'special')
+            ->where('expire_at', '>', $now)
+            ->where('start_at', '<', $now)
+            // ->whereIn('country_id', [auth()->user()->country_id, null])
+            ->where('country_id', $country ? $country->id : null)
+            ->orderBy('id', 'desc')
+            ->first();
 
         if ($model)
-            $model->comments  = self::prepareTree($model->comments);
+            $model->comments = self::prepareTree($model->comments);
 
         $this->jsonResponse->setData(
             200,
@@ -274,29 +294,33 @@ class SurveysController extends Controller
         $country = Country::where('code', request('country'))->first();
 
         $vote = SurveyVote::groupBy('survey_id')
-        
             ->selectRaw('survey_id, sum(mark) as sum')
-
             ->orderBy('sum', 'desc')
-
-            ->where(function($q) use ($country){
-                $q->whereHas('survey', function($subQ) use ($country){
-                    if($country){
+            ->where(function ($q) use ($country)
+            {
+                $q->whereHas('survey', function ($subQ) use ($country)
+                {
+                    if ($country)
+                    {
                         $subQ->where('is_world', false);
-                    }else{
+                    }
+                    else
+                    {
                         $subQ->where('is_world', true);
                     }
                 });
 
-                if($country){
+                if ($country)
+                {
                     $q->where('country_id', $country->id);
                 }
 
             })
             ->first();
 
-            
-        if (!$vote) {
+
+        if (!$vote)
+        {
             $this->jsonResponse->setData(
                 200,
                 'msg.warning.survey.not_found',
@@ -307,7 +331,7 @@ class SurveysController extends Controller
 
             return $this->jsonResponse->getResponse();
         }
-       
+
 
         $model = Survey::with([
             'choices.votes',
@@ -320,26 +344,27 @@ class SurveysController extends Controller
             /*->whereHas('choices', function($q){
                 $q->where('status', '=', true);
             })*/
-            ->where('status','=', true)
-            ->where('type','=','normal');
+            ->where('status', '=', true)
+            ->where('type', '=', 'normal');
 
-            if (!is_null($vote)):
-              $model->where('id', $vote->survey_id);
-            endif;
-            // if(!$country){
-            // }
-            
-            // if(!$country){
-            //   $model->where('is_world', true);
-            // } else {
-            //     // $model->where('is_world', false);
-            //     $model->where('country_id', $country->id);
-            // }
-            
+        if (!is_null($vote)):
+            $model->where('id', $vote->survey_id);
+        endif;
+        // if(!$country){
+        // }
+
+        // if(!$country){
+        //   $model->where('is_world', true);
+        // } else {
+        //     // $model->where('is_world', false);
+        //     $model->where('country_id', $country->id);
+        // }
+
         $model = $model->first();
 
-        if ($model){
-            $model->comments  = self::prepareTree($model->comments);
+        if ($model)
+        {
+            $model->comments = self::prepareTree($model->comments);
         }
 
 
@@ -356,7 +381,8 @@ class SurveysController extends Controller
     private function prepareTree($comments)
     {
         $allComments = [];
-        foreach ($comments as $key => $comment){
+        foreach ($comments as $key => $comment)
+        {
             self::prepareTree($comment->comments);
             $allComments[] = $comment;
         }
@@ -366,17 +392,22 @@ class SurveysController extends Controller
 
     private function addSurveyChoices($survey, $type = null, $request)
     {
-        if($survey){
-            foreach (request()->json('choices') as $choice) {
+        if ($survey)
+        {
+            foreach (request()->json('choices') as $choice)
+            {
 
-                if (is_null($choice['id']) || $choice['id'] == "" ) {
+                if (is_null($choice['id']) || $choice['id'] == "")
+                {
                     $choiceSaved = SurveyChoice::create([
                         'choice_title' => $choice['choice_title'],
                         'survey_id' => $survey->id ?? request('id'),
                         'choice_image' => !empty($choice['choice_image']) ? $choice['choice_image'] : null,
                         'choice_description' => $choice['choice_description']
                     ]);
-                }else {
+                }
+                else
+                {
                     $choiceSaved = SurveyChoice::find($choice['id']);
                     $choiceSaved->choice_title = $choice['choice_title'];
                     $choiceSaved->choice_description = $choice['choice_description'];
@@ -391,10 +422,11 @@ class SurveysController extends Controller
                 $vote = new SurveyVote();
                 $vote->survey_id = $survey->id ?? request('id');
                 $vote->choice_id = $choiceSaved->id;
-                $vote->user_id   = auth()->id();
+                $vote->user_id = auth()->id();
                 $vote->country_id = $country;
 
-                if (!empty($choice['marking'])) {
+                if (!empty($choice['marking']))
+                {
                     $vote->mark = $choice['marking'];
                 }
 
@@ -408,7 +440,8 @@ class SurveysController extends Controller
      */
     private function saveSurvey($request)
     {
-        if(request('type') === 'special') {
+        if (request('type') === 'special')
+        {
             // self::homeUpdate($request);
         }
 
@@ -440,7 +473,7 @@ class SurveysController extends Controller
             'status' => (int)request('status')
         ]);
 
-        $this->jsonResponse->setData(200,  'msg.info.category.confirmation', $survey);
+        $this->jsonResponse->setData(200, 'msg.info.category.confirmation', $survey);
         return $this->jsonResponse->getResponse();
     }
 
@@ -458,7 +491,7 @@ class SurveysController extends Controller
         ]);
 
 
-        $this->jsonResponse->setData(200,  'msg.info.category.confirmation', $survey);
+        $this->jsonResponse->setData(200, 'msg.info.category.confirmation', $survey);
         return $this->jsonResponse->getResponse();
     }
 
@@ -466,9 +499,10 @@ class SurveysController extends Controller
     {
         $country = (new CountryService($request))->getCountry();
 
-        $forUpdate = Survey::where('show_on_home','=', true)
+        $forUpdate = Survey::where('show_on_home', '=', true)
             ->where('country_id', '=', auth()->user()->country_id ? auth()->user()->country_id : null)->first();
-        if ($forUpdate) {
+        if ($forUpdate)
+        {
             $forUpdate->show_on_home = false;
             $forUpdate->save();
         }
@@ -477,8 +511,8 @@ class SurveysController extends Controller
 
     public function hasSurvey($id)
     {
-        $survey = Survey::where('category_id','=',$id)->get();
-        $this->jsonResponse->setData(200,  'msg.info.survey.list', $survey);
+        $survey = Survey::where('category_id', '=', $id)->get();
+        $this->jsonResponse->setData(200, 'msg.info.survey.list', $survey);
         return $this->jsonResponse->getResponse();
     }
 
@@ -487,13 +521,12 @@ class SurveysController extends Controller
         $country = (new CountryService($request))->getCountry();
 
         $model = Survey::where(
-            'created_at','>=', Carbon::now()->subDays(30)->toDateTimeString()
+            'created_at', '>=', Carbon::now()->subDays(30)->toDateTimeString()
         )
-            ->where('country_id','=', auth()->user()->country_id ? auth()->user()->country_id : null)
-
+            ->where('country_id', '=', auth()->user()->country_id ? auth()->user()->country_id : null)
             ->get();
 
-        $this->jsonResponse->setData(200,  'msg.info.survey.list', $model);
+        $this->jsonResponse->setData(200, 'msg.info.survey.list', $model);
         return $this->jsonResponse->getResponse();
     }
 
@@ -506,13 +539,14 @@ class SurveysController extends Controller
 
         $ids = [];
 
-        foreach ($votes as $id) {
+        foreach ($votes as $id)
+        {
             $ids[] = $id->survey_id;
         }
 
         $surveys = Survey::whereIn('id', $ids)->get();
 
-        $this->jsonResponse->setData(200,  'msg.info.survey.list', $surveys);
+        $this->jsonResponse->setData(200, 'msg.info.survey.list', $surveys);
         return $this->jsonResponse->getResponse();
     }
 
@@ -520,44 +554,50 @@ class SurveysController extends Controller
     {
         $survey = Survey::with('choices')->find($id);
 
-        $countVoteds = SurveyVote::whereHas('users', function ($relation){
-            $relation->where('social_type', '=','fake');
+        $countVoteds = SurveyVote::whereHas('users', function ($relation)
+        {
+            $relation->where('social_type', '=', 'fake');
         })
             ->where('survey_id', '=', $id)
             ->where('choice_id', '=', \request('choice_id'))->get();
 
         $usersId = [];
-        foreach ($countVoteds as $countVoted) {
+        foreach ($countVoteds as $countVoted)
+        {
             $usersId[] = $countVoted->user_id;
         }
 
-        if ($countVoteds->count() > \request('count')) {
-            foreach ($countVoteds as $countVoted) {
+        if ($countVoteds->count() > \request('count'))
+        {
+            foreach ($countVoteds as $countVoted)
+            {
                 $users[] = $countVoted->user_id;
                 $countVoted->delete();
             }
         }
 
-        $users =  User::whereNotIn('id',$usersId)
+        $users = User::whereNotIn('id', $usersId)
             // ->where('country_id','=', auth()->user()->country_id)
-            ->where('social_type','=','fake')
+            ->where('social_type', '=', 'fake')
             ->take(\request('count'))
             ->get();
 
-        foreach ($users as $user) {
+        foreach ($users as $user)
+        {
 
             $vote = new SurveyVote();
             $vote->survey_id = $survey->id;
             $vote->choice_id = \request('choice_id');
             $vote->user_id = $user->id;
             $vote->country_id = auth()->user()->country_id;
-            if ($survey->type === 'normal') {
+            if ($survey->type === 'normal')
+            {
                 $vote->mark = \request('mark');
             }
             $vote->save();
         }
 
-        $this->jsonResponse->setData(200,  'msg.info.survey.success');
+        $this->jsonResponse->setData(200, 'msg.info.survey.success');
         return $this->jsonResponse->getResponse();
     }
 
@@ -575,23 +615,24 @@ class SurveysController extends Controller
         //delete survey
         $survey->delete();
 
-        $this->jsonResponse->setData(200,  'msg.info.survey.delete');
+        $this->jsonResponse->setData(200, 'msg.info.survey.delete');
         return $this->jsonResponse->getResponse();
     }
 
     public function specialDateRange()
     {
-        $all = Survey::select('surveys.start_at', 'surveys.expire_at')->where('country_id','=',auth()->user()->country_id)->get();
-        $this->jsonResponse->setData(200, 'msg.success.dateRage.list',$all );
+        $all = Survey::select('surveys.start_at', 'surveys.expire_at')->where('country_id', '=', auth()->user()->country_id)->get();
+        $this->jsonResponse->setData(200, 'msg.success.dateRage.list', $all);
         return $this->jsonResponse->getResponse();
     }
+
     /**
      * @param null $msg
      * @return array
      */
     private function surveyError($msg = null)
     {
-        $this->jsonResponse->setData(200, 'msg.error.occured:', '', [$msg] );
+        $this->jsonResponse->setData(200, 'msg.error.occured:', '', [$msg]);
         return $this->jsonResponse->getResponse();
     }
 
@@ -600,18 +641,20 @@ class SurveysController extends Controller
         $country = (new CountryService($request))->getCountry();
         $votes = SurveyVote::groupBy('survey_id')
             ->selectRaw('survey_id, sum(mark) as sum')
-            ->where('country_id','=', auth()->user()->country_id ? auth()->user()->country_id : null)
+            ->where('country_id', '=', auth()->user()->country_id ? auth()->user()->country_id : null)
             ->orderBy('sum', 'desc')
             ->get();
 
         $category = Category::where('slug', $category)->first();
 
-        if (!$category) {
+        if (!$category)
+        {
             $this->jsonResponse->setData(400, 'msg.error.list', []);
             return $this->jsonResponse->getResponse();
         }
 
-        foreach ($votes as $vote) {
+        foreach ($votes as $vote)
+        {
             $survey = Survey::with([
                 'choices.votes',
                 'subjects',
@@ -621,11 +664,13 @@ class SurveysController extends Controller
                 'comments.likes.user'
             ])->find($vote['survey_id']);
 
-            if (is_null($survey)) {
+            if (is_null($survey))
+            {
                 continue;
             }
 
-            if (!is_null($survey) && $survey->category_id == $category->id) {
+            if (!is_null($survey) && $survey->category_id == $category->id)
+            {
                 $this->jsonResponse->setData(200, 'msg.success.list', $survey);
                 return $this->jsonResponse->getResponse();
             }

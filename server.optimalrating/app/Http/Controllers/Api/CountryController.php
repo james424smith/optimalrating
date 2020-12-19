@@ -33,58 +33,75 @@ class CountryController extends Controller
 
     public function index()
     {
-        $model  = Country::with(['user'])
+        $model = Country::with(['user'])
             ->orderBy(request("sort", 'id'), request("order", 'desc'))
             ->get();
 
         $pagination = new ApiPagination(request("limit", 20), count($model), request("offset", 0));
 
         $this->jsonResponse->setData(200,
-            'msg.info.success.country.list', $model,null, $pagination->getConvertObject());
+            'msg.info.success.country.list', $model, null, $pagination->getConvertObject());
 
         return $this->jsonResponse->getResponse();
     }
 
     public function store(Request $request)
     {
+
         $validator = new CountryValidator();
 
-        if($response = $validator->validate())
+        if ($response = $validator->validate())
             return $response;
 
-        $country = Country::create(request()->json()->all());
 
         //create country admin
 
-        if(!$countryAdmin = User::where('email', $request->json('email'))->first()){
-            $countryAdmin = User::create([
-                'email'=> $request->json('email'),
-                'username'=> $request->json('name_en').'_admin',
-                'password'=> Hash::make($request->json('password')),
-                'country_id' => $country->id
-            ]);
-        } else {
-            
+        if (!$countryAdmin = User::where('email', $request->json('email'))->first())
+        {
+            $countryAdmin = new User();
+            $countryAdmin->email = $request->json('email');
+            $countryAdmin->username = $request->json('name_en') . '_admin';
+            $countryAdmin->password = Hash::make($request->json('password'));
+            $countryAdmin->save();
+//            $countryAdmin = User::create([
+//                'email' => $request->json('email'),
+//                'username' => $request->json('name_en') . '_admin',
+//                'password' => Hash::make($request->json('password')),
+//                'country_id' => $country->id
+//            ]);
+            $data = $request->json()->all();
+
+            $data['country_admin'] = $countryAdmin->id;
+
+
+            $country = Country::create($data);
+            $countryAdmin->country_id = $country->id;
+            $countryAdmin->save();
+        }
+        else
+        {
+
             $countryAdmin->country_id = $country->id;
 
             $countryAdmin->update();
         }
 
-        $role_country_admin  = Role::where('name', 'country_admin')->first();
+        $role_country_admin = Role::where('name', 'country_admin')->first();
 
         $countryAdmin->roles()->attach($role_country_admin);
 
         (new FakeService())->createUser($country);
 
         return response()->json([
-            'code'   => 200,
-            'message'=> 'msg.info.country.add',
+            'code' => 200,
+            'message' => 'msg.info.country.add',
         ]);
     }
 
     public function show(Country $country)
     {
-        try {
+        try
+        {
             return response()->json([
                 'code' => 200,
                 'message' => 'msg.info.country.show',
@@ -93,8 +110,9 @@ class CountryController extends Controller
                 ]
             ]);
         }
-        catch (Exception $e){
-            return $this->jsonResponse->setData(200,  'msg.error.not_found')->getResponse();
+        catch (Exception $e)
+        {
+            return $this->jsonResponse->setData(200, 'msg.error.not_found')->getResponse();
         }
     }
 
@@ -107,13 +125,14 @@ class CountryController extends Controller
 
         $country->update(request()->json()->all());
 
-        if (!is_null($request->json('password'))) {
+        if (!is_null($request->json('password')))
+        {
             $user = $country->user()->first();
             $user->password = bcrypt($request->json('password'));
             $user->save();
         }
 
-        $this->jsonResponse->setData(200,  'msg.info.success.country.update', []);
+        $this->jsonResponse->setData(200, 'msg.info.success.country.update', []);
         return $this->jsonResponse->getResponse();
 
     }
@@ -127,7 +146,7 @@ class CountryController extends Controller
 
         // $country->update(['status'=>'passive']);
 
-        return $this->jsonResponse->setData(200,   'msg.info.success.country.delete')->getResponse();
+        return $this->jsonResponse->setData(200, 'msg.info.success.country.delete')->getResponse();
     }
 
     /**
@@ -136,7 +155,7 @@ class CountryController extends Controller
      */
     public function citiesOfCountry(Country $country)
     {
-        $model = City::where('country_id','=', $country->id)->get();
+        $model = City::where('country_id', '=', $country->id)->get();
 
         $this->jsonResponse->setData(200,
             'msg.info.success.city.list',
@@ -152,7 +171,7 @@ class CountryController extends Controller
      */
     public function languages(Request $request)
     {
-        $countries = Country::orderBy('name')->select('id','name','flag','name_en','code')->get();
+        $countries = Country::orderBy('name')->select('id', 'name', 'flag', 'name_en', 'code')->get();
 
         $IP = $request->server->get('REMOTE_ADDR');
 
@@ -160,6 +179,6 @@ class CountryController extends Controller
 
         //$languages = (new LanguagesService($countries, $IPService))->languagesCountries();
 
-        return $this->jsonResponse->setData(200,   'msg.info.success.country.list', $countries)->getResponse();
+        return $this->jsonResponse->setData(200, 'msg.info.success.country.list', $countries)->getResponse();
     }
 }
