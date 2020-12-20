@@ -1,5 +1,5 @@
-import store from 'store';
-import actions from 'store/actions/auth';
+import store from "store";
+import actions from "store/actions/auth";
 
 export const getAccount = async () => {
   try {

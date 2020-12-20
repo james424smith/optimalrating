@@ -100,7 +100,7 @@
                   />
                 </div>
                 <div class="col-7">
-                  <vue-editor :editorToolbar="customToolbar" v-model="choice.choice_description"></vue-editor>
+                  <vue-editor :editorToolbar="customToolbar" :tag="textarea" v-model="choice.choice_description" @text-change="onTextChange($event, index)"></vue-editor>
                 </div>
               </div>
               <div class="form-group">
@@ -197,6 +197,9 @@ export default {
     }
   },
   methods: {
+    onTextChange(e, i) {
+      this.survey.choices[i].choice_description = this.survey.choices[i].choice_description.replace("<p>", "").replace("</p>", "")
+    },
     onImage(e, i) {
       this.survey.choices[i].choice_image = e;
     },
