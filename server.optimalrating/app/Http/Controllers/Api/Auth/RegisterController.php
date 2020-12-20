@@ -79,12 +79,12 @@ class RegisterController extends Controller
         }*/
 
         if(User::whereEmail($request->json('email'))->first()) {
-            $customResponse = $customJsonResponse->setData(409,  'msg.error.email_already_used','', $validator->errors()->all());
-            return $customResponse->getResponse();
+            $customResponse = $customJsonResponse->setData(409,  'msg.error_phone_number_already_used','', $validator->errors()->all());
+            return $customResponse->    getResponse();
         }
 
         if(UserDetail::where('phone_number','=',$request->json('phone_number'))->first()) {
-            $customResponse = $customJsonResponse->setData(409,  'msg.error.phone_number_already_used','', $validator->errors()->all());
+            $customResponse = $customJsonResponse->setData(409,  'msg.error_phone_number_already_used','', $validator->errors()->all());
             return $customResponse->getResponse();
         }
         $country = $request->json('country');
@@ -124,8 +124,6 @@ class RegisterController extends Controller
         $proxy = Request::create('oauth/token', 'POST');
 
         return Route::dispatch($proxy);
-
-
     }
 
     public function checkSmsVerify(Request $request)
