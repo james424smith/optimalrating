@@ -27,7 +27,6 @@ export default () => {
         notification.success({ message: t("msg.success_register") });
       })
       .catch((err) => {
-        console.log(err);
         notification.error({ message: t(err.message) });
       });
   };
