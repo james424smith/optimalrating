@@ -1,5 +1,6 @@
 {
   "name": "optimal-react",
+  "hompage": "http://www.optimalrating.com/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

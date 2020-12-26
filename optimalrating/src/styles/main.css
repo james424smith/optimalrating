@@ -26243,13 +26243,25 @@ div.ant-typography-edit-content.ant-typography-rtl {
   position: relative;
   z-index: 3;
 }
+.CategoryModal .SurveyAvatar {
+  min-width: 250px;
+  max-width: 250px;
+  height: 250px !important;
+}
 .CategoryModal .ant-modal-title {
   font-weight: bold;
 }
+.CategoryModal .d-flex {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  height: auto;
+}
 .CategoryModal .d-flex img {
-  width: 120px;
-  min-width: 120px;
-  max-width: 120px;
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  height: auto;
 }
 .Category .ant-collapse {
   border: none;
