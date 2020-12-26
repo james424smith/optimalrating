@@ -3,6 +3,8 @@ import { Modal, Button, Rate, notification } from "antd";
 import { SurveyAvatar } from "components";
 import { getData, postData } from "store/requests/global";
 
+import "../../styles/components/avatar.less";
+
 export default ({ onClick, onRefresh, surveyId, data, t }) => {
   const [mark, setMark] = useState(0);
   const [loading, setLoading] = useState(false);
