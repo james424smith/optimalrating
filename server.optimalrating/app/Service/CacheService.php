@@ -28,7 +28,8 @@ class CacheService
      */
     public function __construct()
     {
-        switch (config('cache.default')) {
+        switch (config('cache.default'))
+        {
             case 'file':
             case 'memcached':
                 $this->cache = new Memcached();
@@ -44,26 +45,29 @@ class CacheService
         $countryModel = Country::all();
         $response = array();
 
-        foreach ($countryModel as $country){
+        foreach ($countryModel as $country)
+        {
 
-            $model = Keyword::with([
-                'translations' => function($q) use($country) {
-                    $q->where('country_code','=', $country->code);
-                }])->get();
-
+            $model = Keyword::with(
+                [
+                    'translations' => function ($q) use ($country)
+                    {
+                        $q->where('country_code', '=', $country->code);
+                    }
+                ])->get();
             $obj = new \stdClass();
-            foreach ($model as $keyword) {
+            foreach ($model as $keyword)
+            {
                 $obj->{$keyword->key} = count($keyword->translations) ?
-                    $keyword->translations[count($keyword->translations) -1]->translation : $keyword->default;
+                    $keyword->translations[count($keyword->translations) - 1]->translation : $keyword->default;
             }
-
             /**
              * @todo page lang
              */
 
             $pages = Page::with('translation')->get();
-
-            foreach ($pages as $page) {
+            foreach ($pages as $page)
+            {
 
                 $translation = $page->translation($country->code)->first();
 
