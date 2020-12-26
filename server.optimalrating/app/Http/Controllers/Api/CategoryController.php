@@ -62,7 +62,6 @@ class CategoryController extends Controller
         if(auth()->user()->hasRole('super_admin'))
             $requestJsonAll['country_id'] = null;
 
-
         $requestJsonAll['code'] = 'category.'.str_slug($requestJsonAll['name']);
 
         new KeywordService($requestJsonAll['code'], $requestJsonAll['name'], 'category');
@@ -211,7 +210,10 @@ class CategoryController extends Controller
     {
         $allCategory = [];
         foreach ($categories as $key => $category){
-            $child = Category::where("parent", $category->id)->where('status', $status)->get();
+            $child = Category::where("parent", $category->id)
+                ->where('status', $status)
+                ->PrepareChildrenWhere()
+                ->get();
             $category->children = self::prepareTree($child, $status);
             $allCategory[] = $category;//parent::snakeCaseToCamelCase($category);
         }

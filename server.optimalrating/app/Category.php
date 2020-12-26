@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class Category extends Model
 {
@@ -51,6 +52,14 @@ class Category extends Model
     public function user()
     {
         return $this->belongsTo('App\User', 'user_id')->with('userDetails');
+    }
+
+    public function scopePrepareChildrenWhere($query)
+    {
+        if (!auth()->user()->hasRole('super_admin'))
+        {
+            return $query->where('country_id', Auth::user()->country_id);
+        }
     }
 
   /*  protected static function boot()
