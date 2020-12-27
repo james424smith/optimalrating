@@ -166,6 +166,7 @@ class SurveysController extends Controller
             'user.userDetails'
         ])
             ->where('id', $id);
+//            ->where('mark', '!=', null);
 
         if (auth()->user() && !auth()->user()->hasAnyRole(['country_admin', 'super_admin']))
         {

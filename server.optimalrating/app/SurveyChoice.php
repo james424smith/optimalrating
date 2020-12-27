@@ -27,6 +27,6 @@ class SurveyChoice extends Model
 
     public function votes()
     {
-        return $this->hasMany(SurveyVote::class, 'choice_id');
+        return $this->hasMany(SurveyVote::class, 'choice_id')->whereNotNull('mark');
     }
 }
