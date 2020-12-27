@@ -71,11 +71,9 @@ export const calculateSurvey = (data, isSpecial) => {
       return { ...x, score: score, color: colors[i] };
     });
 
-  const total = result.reduce((a, b) => a + b.score, 0);
-
   result = result.map((x) => ({
     ...x,
-    percent: x.score ? ((x.score / total) * 100).toFixed(2) : 0,
+    percent: x.score ? ((x.score / 5) * 100).toFixed(2) : 0,
   }));
 
   return isSpecial ? result : result.sort((a, b) => b.percent - a.percent);
