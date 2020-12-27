@@ -261,7 +261,7 @@ class SurveysController extends Controller
         $now = (new Carbon());
 
         $model = Survey::with([
-            'choices.votes',
+            'choices.votesSpecial',
             'subjects',
             'comments.comments.likes',
             'comments.comments.user.userDetails',

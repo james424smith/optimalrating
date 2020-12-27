@@ -29,4 +29,9 @@ class SurveyChoice extends Model
     {
         return $this->hasMany(SurveyVote::class, 'choice_id')->whereNotNull('mark');
     }
+
+    public function votesSpecial()
+    {
+        return $this->hasMany(SurveyVote::class, 'choice_id');
+    }
 }
