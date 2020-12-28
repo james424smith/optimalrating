@@ -65,6 +65,7 @@ export const calculateSurvey = (data, isSpecial) => {
     .filter((x) => (isSpecial ? true : x.status === "1"))
     .map((x, i) => {
       x.votes = uniqBy(x.votes, "user_id");
+
       x.votes_special = uniqBy(x.votes_special, "user_id");
       const N = x.votes.length;
       const N_Special = x.votes_special.length;
@@ -75,9 +76,15 @@ export const calculateSurvey = (data, isSpecial) => {
       return { ...x, score: score, color: colors[i] };
     });
 
+  const total = result.reduce((a, b) => a + b.score, 0);
+
   result = result.map((x) => ({
     ...x,
-    percent: x.score ? ((x.score / 5) * 100).toFixed(2) : 0,
+    percent: x.score
+      ? isSpecial
+        ? ((x.score / total) * 100).toFixed(2)
+        : ((x.score / 5) * 100).toFixed(2)
+      : 0,
   }));
 
   return isSpecial ? result : result.sort((a, b) => b.percent - a.percent);
